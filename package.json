@@ -1,0 +1,8 @@
+{
+  "name": "hacknovate-commit-tracker-worker",
+  "version": "1.0.0",
+  "description": "GitHub Action worker script dependencies.",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2"
+  }
+}
