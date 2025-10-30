@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "team_alpha",
+    "name": "Team Alpha (Web)",
+    "total_commits": 0,
+    "color": "#007bff"
+  },
+  {
+    "id": "team_beta",
+    "name": "Team Beta (Mobile)",
+    "total_commits": 0,
+    "color": "#dc3545"
+  },
+  {
+    "id": "team_gamma",
+    "name": "Team Gamma (Data)",
+    "total_commits": 0,
+    "color": "#ffc107"
+  }
+]
