@@ -179,3 +179,4 @@ const App = () => {
 };
 
 export default App;
+window.App = App; // CRITICAL FIX: Expose App globally for app-container.js to find it.
