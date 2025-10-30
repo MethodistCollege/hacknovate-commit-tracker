@@ -1,0 +1,41 @@
+name: Commit Tracker Scheduler
+
+# This schedules the workflow to run every 5 minutes
+on:
+  schedule:
+    # CRON Expression: 'minute' 'hour' 'day of month' 'month' 'day of week'
+    # '*/5 * * * *' = Runs at minute 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 of every hour
+    - cron: '*/5 * * * *'
+  # Allows manual triggering from the 'Actions' tab for easy testing
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    # Use a standard, free GitHub-hosted runner
+    runs-on: ubuntu-latest
+    
+    # Make the PAT secret available as an environment variable
+    env:
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+    steps:
+      # 1. Checkout the repository content
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Use the GH_PAT secret for checkout so the script can push back later
+          token: ${{ secrets.GH_PAT }} 
+      
+      # 2. Setup Node.js environment (required to run worker.js)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install required package (@octokit/rest)
+      - name: Install dependencies
+        run: npm install @octokit/rest
+
+      # 4. Execute the data processing script
+      - name: Execute Commit Worker
+        run: node worker.js
