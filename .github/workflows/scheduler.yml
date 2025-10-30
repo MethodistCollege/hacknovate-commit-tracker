@@ -36,6 +36,6 @@ jobs:
       - name: Install dependencies
         run: npm install @octokit/rest
 
-     # 4. Execute the data processing script
+   # 4. Execute the data processing script
       - name: Execute Commit Worker
-        run: node ./worker.js # ADDED './' to explicitly specify the path
+        run: node $GITHUB_WORKSPACE/worker.js
