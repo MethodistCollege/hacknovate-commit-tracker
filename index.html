@@ -13,7 +13,70 @@
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <script type="text/babel">
+// Paste this code starting where your imports end (around line 16)
+// Ensure you have all your import statements at the top of the block.
+
+// --- UTILITY COMPONENTS ---
+
+const TimeSeriesCard = ({ title, children, className = '' }) => (
+  <div className={`bg-white shadow-xl rounded-xl p-6 transition-all duration-300 hover:shadow-2xl ${className}`}>
+    <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">{title}</h2>
+    {children}
+  </div>
+);
+
+// --- MAIN DASHBOARD APP ---
+const App = () => {
+    // 1. STATE AND HOOKS (MUST be inside App)
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [historyData, setHistoryData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [lastUpdate, setLastUpdate] = useState(null);
+
+    // 2. CONFIG AND MEMOIZATION (MUST be inside App)
+    const RAW_URL_BASE = "https://raw.githubusercontent.com/MethodistCollege/hacknovate-commit-tracker/main/"; 
+    const LEADERBOARD_URL = `${RAW_URL_BASE}data/leaderboard.json?cache=${Date.now()}`;
+    const HISTORY_URL = `${RAW_URL_BASE}data/history.json?cache=${Date.now()}`;
+
+    const teamConfigs = useMemo(() => {
+        return leaderboard.map(team => ({
+            id: team.id,
+            name: team.name,
+            color: team.color || '#4c51bf'
+        }));
+    }, [leaderboard]);
+
+    // 3. LOGIC (MUST be inside App)
+    const fetchData = async () => {
+        // ... (Paste your entire fetchData function here, including try/catch blocks) ...
+    };
+
+    // 4. EFFECTS (MUST be inside App)
+    useEffect(() => {
+        fetchData();
+        const intervalId = setInterval(fetchData, 30000);
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // 5. FINAL CALCULATIONS (MUST be inside App)
+    const totalHackathonCommits = leaderboard.reduce((sum, team) => sum + team.total_commits, 0);
+
+    // 6. RENDER RETURN (MUST be the final thing in App)
+    return (
+        <div className="min-h-screen bg-gray-900 p-4 sm:p-8 font-sans text-white">
+            {/* Tailwind and Font Links (Must be inside the return() for the style to be active) */}
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+            
+            {/* ... Rest of your dashboard HTML/JSX structure goes here, using the variables correctly ... */}
+
+        </div>
+    );
+};
+
+// --- FINAL RENDER CALL (MUST be outside App but inside the final script block) ---
+
+ReactDOM.render(<App />, document.getElementById('root'));
         
         // --- START OF LIVE COMMIT DASHBOARD JSX CODE ---
         
