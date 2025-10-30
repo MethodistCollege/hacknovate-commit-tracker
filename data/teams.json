@@ -1,0 +1,20 @@
+[
+  {
+    "id": "team_alpha",
+    "name": "Team Alpha (Web)",
+    "color": "#007bff",
+    "repos": ["Hacknovate-Org/web-repo-alpha", "Hacknovate-Org/api-repo-alpha"]
+  },
+  {
+    "id": "team_beta",
+    "name": "Team Beta (Mobile)",
+    "color": "#dc3545",
+    "repos": ["Hacknovate-Org/mobile-repo-beta"]
+  },
+  {
+    "id": "team_gamma",
+    "name": "Team Gamma (Data)",
+    "color": "#ffc107",
+    "repos": ["Hacknovate-Org/data-repo-gamma"]
+  }
+]
