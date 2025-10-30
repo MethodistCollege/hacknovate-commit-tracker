@@ -34,9 +34,9 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Install required package (@octokit/rest)
+      # 3. Install required package for GitHub API
       - name: Install dependencies
-        run: npm install @octokit/rest
+        run: npm install
         
       # 4. Execute the data processing script
       - name: Execute Commit Worker
