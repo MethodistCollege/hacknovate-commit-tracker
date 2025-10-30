@@ -23,8 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Use the GH_PAT secret for checkout so the script can push back later
+          # Use the powerful GH_PAT secret for checkout so the script can push back later
           token: ${{ secrets.GH_PAT }} 
+          # Ensure this is the correct branch (main or master)
+          ref: main
       
       # 2. Setup Node.js environment (required to run worker.js)
       - name: Set up Node.js
@@ -35,7 +37,7 @@ jobs:
       # 3. Install required package (@octokit/rest)
       - name: Install dependencies
         run: npm install @octokit/rest
-
-   # 4. Execute the data processing script
+        
+      # 4. Execute the data processing script
       - name: Execute Commit Worker
-        run: node $GITHUB_WORKSPACE/worker.js
+        run: node ./worker.js
