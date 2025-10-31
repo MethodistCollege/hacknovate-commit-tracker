@@ -488,5 +488,15 @@
       "team_gamma": 0
     },
     "total": 0
+  },
+  {
+    "time": "10:00 AM",
+    "timestamp": 1761904807847,
+    "teams": {
+      "team_alpha": 0,
+      "team_beta": 0,
+      "team_gamma": 0
+    },
+    "total": 0
   }
 ]
