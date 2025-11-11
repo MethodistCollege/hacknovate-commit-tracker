@@ -3,267 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hacknovate 2025 Live Leaderboard</title>
+    <title>Hacknovate 2025: Live Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            background-color: #f4f4f9; 
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #0056b3; }
+        h2 { border-bottom: 2px solid #ccc; padding-bottom: 5px; }
+        #leaderboard {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .team-entry {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .team-entry strong { font-size: 1.2em; }
+        .team-entry small { color: #555; display: block; }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <h1>Hacknovate 2025: Live Commit Tracker</h1>
+    <p>Data updates every 5 minutes. Dashboard refreshes every 30 seconds.</p>
+    <p id="last-updated">Loading...</p>
 
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <h2>📊 Commit Leaderboard (Total)</h2>
+    <div id="graph-container" style="width:100%; max-width:600px;">
+        <canvas id="commitGraph"></canvas>
+    </div>
 
-// Paste this code starting where your imports end (around line 16)
-// Ensure you have all your import statements at the top of the block.
+    <h2>🏆 Team Rankings & Repos</h2>
+    <div id="leaderboard">
+        <p>Loading leaderboard...</p>
+    </div>
 
-// --- UTILITY COMPONENTS ---
-
-const TimeSeriesCard = ({ title, children, className = '' }) => (
-  <div className={`bg-white shadow-xl rounded-xl p-6 transition-all duration-300 hover:shadow-2xl ${className}`}>
-    <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">{title}</h2>
-    {children}
-  </div>
-);
-
-// --- MAIN DASHBOARD APP ---
-const App = () => {
-    // 1. STATE AND HOOKS (MUST be inside App)
-    const [leaderboard, setLeaderboard] = useState([]);
-    const [historyData, setHistoryData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [lastUpdate, setLastUpdate] = useState(null);
-
-    // 2. CONFIG AND MEMOIZATION (MUST be inside App)
-    const RAW_URL_BASE = "https://raw.githubusercontent.com/MethodistCollege/hacknovate-commit-tracker/main/"; 
-    const LEADERBOARD_URL = `${RAW_URL_BASE}data/leaderboard.json?cache=${Date.now()}`;
-    const HISTORY_URL = `${RAW_URL_BASE}data/history.json?cache=${Date.now()}`;
-
-    const teamConfigs = useMemo(() => {
-        return leaderboard.map(team => ({
-            id: team.id,
-            name: team.name,
-            color: team.color || '#4c51bf'
-        }));
-    }, [leaderboard]);
-
-    // 3. LOGIC (MUST be inside App)
-    const fetchData = async () => {
-        // ... (Paste your entire fetchData function here, including try/catch blocks) ...
-    };
-
-    // 4. EFFECTS (MUST be inside App)
-    useEffect(() => {
-        fetchData();
-        const intervalId = setInterval(fetchData, 30000);
-        return () => clearInterval(intervalId);
-    }, []);
-
-    // 5. FINAL CALCULATIONS (MUST be inside App)
-    const totalHackathonCommits = leaderboard.reduce((sum, team) => sum + team.total_commits, 0);
-
-    // 6. RENDER RETURN (MUST be the final thing in App)
-    return (
-        <div className="min-h-screen bg-gray-900 p-4 sm:p-8 font-sans text-white">
-            {/* Tailwind and Font Links (Must be inside the return() for the style to be active) */}
-            <script src="https://cdn.tailwindcss.com"></script>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-            
-            {/* ... Rest of your dashboard HTML/JSX structure goes here, using the variables correctly ... */}
-
-        </div>
-    );
-};
-
-// --- FINAL RENDER CALL (MUST be outside App but inside the final script block) ---
-
-ReactDOM.render(<App />, document.getElementById('root'));
-        
-        // --- START OF LIVE COMMIT DASHBOARD JSX CODE ---
-        
-        import React, { useState, useEffect, useMemo } from 'react';
-        import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-
+    <script>
         // --- CONFIGURATION ---
-        // *** THIS URL IS CORRECT FOR YOUR REPOSITORY ***
-        const RAW_URL_BASE = "https://raw.githubusercontent.com/MethodistCollege/hacknovate-commit-tracker/main/"; 
-        
-        // We add a unique cache-buster to ensure the dashboard always fetches the latest file
-        const LEADERBOARD_URL = `${RAW_URL_BASE}data/leaderboard.json?cache=${Date.now()}`;
-        const HISTORY_URL = `${RAW_URL_BASE}data/history.json?cache=${Date.now()}`;
+        const RAW_URL_BASE = "https://raw.githubusercontent.com/MethodistCollege/hacknovate-commit-tracker/main/";
+        const LEADERBOARD_URL = `${RAW_URL_BASE}data/leaderboard.json`;
+        const HISTORY_URL = `${RAW_URL_BASE}data/history.json`;
 
-        // --- UTILITY COMPONENTS ---
+        const leaderboardDiv = document.getElementById('leaderboard');
+        const lastUpdatedP = document.getElementById('last-updated');
+        const ctx = document.getElementById('commitGraph').getContext('2d');
+        let myChart; // We store the chart in a variable to destroy it on update
 
-        const TimeSeriesCard = ({ title, children, className = '' }) => (
-          <div className={`bg-white shadow-xl rounded-xl p-6 transition-all duration-300 hover:shadow-2xl ${className}`}>
-            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">{title}</h2>
-            {children}
-          </div>
-        );
-
-        // --- MAIN DASHBOARD APP ---
-        const App = () => {
-          const [leaderboard, setLeaderboard] = useState([]);
-          const [historyData, setHistoryData] = useState([]);
-          const [loading, setLoading] = useState(true);
-          const [lastUpdate, setLastUpdate] = useState(null);
-
-          // Memoize team data for graph legends/lines from the leaderboard config
-          const teamConfigs = useMemo(() => {
-            return leaderboard.map(team => ({
-              id: team.id,
-              name: team.name,
-              color: team.color || '#4c51bf' // Fallback color
-            }));
-          }, [leaderboard]);
-
-          // --- Data Fetching Logic (Polling) ---
-          const fetchData = async () => {
-            setLoading(true);
+        // --- DATA FETCHER ---
+        async function fetchData() {
             try {
-              // 1. Fetch Leaderboard (Total Scores)
-              const leaderboardResponse = await fetch(LEADERBOARD_URL);
-              const newLeaderboard = await leaderboardResponse.json();
-              setLeaderboard(newLeaderboard);
+                // Add a cache-busting query parameter
+                const cacheBust = `?t=${Date.now()}`;
+                
+                // Fetch both files
+                const [leaderboardRes, historyRes] = await Promise.all([
+                    fetch(LEADERBOARD_URL + cacheBust),
+                    fetch(HISTORY_URL + cacheBust)
+                ]);
 
-              // 2. Fetch History (Time-Series Data)
-              const historyResponse = await fetch(HISTORY_URL);
-              const rawHistory = await historyResponse.json();
-              
-              // 3. Transform history data for Recharts
-              const transformedHistory = rawHistory.map(entry => {
-                const base = { time: entry.time, total: entry.total };
-                // Flatten team-specific counts into the base object
-                Object.entries(entry.teams).forEach(([id, count]) => {
-                  base[id] = count;
-                });
-                return base;
-              });
-              setHistoryData(transformedHistory);
-              setLastUpdate(new Date().toLocaleTimeString());
+                const leaderboardData = await leaderboardRes.json();
+                const historyData = await historyRes.json();
+
+                // Update the "Last Updated" text
+                lastUpdatedP.textContent = `Dashboard Last Refreshed: ${new Date().toLocaleTimeString()}`;
+
+                // --- 1. Update Leaderboard ---
+                updateLeaderboard(leaderboardData);
+
+                // --- 2. Update Graph ---
+                updateGraph(leaderboardData);
 
             } catch (error) {
-              console.error("Error fetching data:", error);
-            } finally {
-              setLoading(false);
+                console.error("Error fetching data:", error);
+                leaderboardDiv.innerHTML = "<p>Error loading data. Check console.</p>";
             }
-          };
+        }
 
-          // Setup polling every 30 seconds
-          useEffect(() => {
-            fetchData(); // Initial load
-            const intervalId = setInterval(fetchData, 30000); // Poll every 30 seconds
+        // --- LEADERBOARD RENDER ---
+        function updateLeaderboard(data) {
+            // Clear old data
+            leaderboardDiv.innerHTML = "";
 
-            return () => clearInterval(intervalId); // Cleanup on component unmount
-          }, []);
+            if (data.length === 0) {
+                leaderboardDiv.innerHTML = "<p>No team data yet. Waiting for first commit...</p>";
+                return;
+            }
 
-          const totalHackathonCommits = leaderboard.reduce((sum, team) => sum + team.total_commits, 0);
+            // Data is already sorted by the GitHub Action, so we just display it
+            data.forEach((team, index) => {
+                const entry = document.createElement('div');
+                entry.className = 'team-entry';
+                
+                // Get the repo list for the team (from data/teams.json)
+                // This is simple but assumes the data/teams.json structure
+                const repos = team.repos || ['No repo list found']; 
+                
+                entry.innerHTML = `
+                    <strong>${index + 1}. ${team.name}: ${team.total_commits} Commits</strong>
+                    <small>Repos: ${repos.join(', ')}</small>
+                `;
+                leaderboardDiv.appendChild(entry);
+            });
+        }
 
-          return (
-            <div className="min-h-screen bg-gray-900 p-4 sm:p-8 font-sans text-white">
-              {/* Tailwind and Font Links (for simple CSS loading) */}
-              <script src="https://cdn.tailwindcss.com"></script>
-              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
-              <style>{`
-                .font-sans { font-family: 'Inter', sans-serif; }
-                .recharts-default-tooltip {
-                  background-color: #1f2937 !important;
-                  border: 1px solid #4b5563 !important;
-                  color: white !important;
-                  padding: 8px;
-                  border-radius: 6px;
-                  opacity: 0.95;
+        // --- GRAPH RENDER (using Chart.js) ---
+        function updateGraph(data) {
+            // Get labels (team names) and data (commit counts)
+            const labels = data.map(team => team.name);
+            const commitCounts = data.map(team => team.total_commits);
+            const colors = data.map(team => team.color || getRandomColor());
+
+            // Destroy the old chart if it exists (prevents flickering)
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            // Create the new chart
+            myChart = new Chart(ctx, {
+                type: 'bar', // A simple bar chart
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Commits',
+                        data: commitCounts,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Makes the bar chart horizontal
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Hide legend for a cleaner look
+                        }
+                    }
                 }
-              `}</style>
-              
-              <div className="max-w-7xl mx-auto">
-                <h1 className="text-4xl font-extrabold text-indigo-400 mb-2">
-                  Hacknovate 2025: Live Commit Tracker
-                </h1>
-                <p className="text-sm text-gray-400 mb-6 flex justify-between items-center">
-                  Data via GitHub Actions (Updates every 5 minutes)
-                  <span className="text-xs text-yellow-400">Dashboard Last Refreshed: {lastUpdate || 'Loading...'}</span>
-                </p>
+            });
+        }
 
-                {/* STATS HEADER */}
-                <div className="bg-gray-800 p-4 rounded-xl shadow-lg mb-8">
-                    <p className="text-2xl font-semibold text-gray-200">Total Hackathon Commits</p>
-                    <p className="text-5xl font-extrabold text-green-400 mt-1">{totalHackathonCommits}</p>
-                </div>
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
 
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    {/* LEADERBOARD (COL 1) */}
-                    <div className="lg:col-span-1">
-                        <TimeSeriesCard title="Overall Leaderboard" className="bg-gray-800 border border-gray-700 h-full">
-                            {loading && <p className="text-indigo-400">Loading leaderboard...</p>}
-                            <div className="space-y-3">
-                                {leaderboard.map((team, index) => (
-                                    <div key={team.id} className={`leaderboard-item flex items-center justify-between p-4 rounded-lg shadow-md ${index === 0 ? 'bg-yellow-600/30 border-2 border-yellow-400' : index === 1 ? 'bg-gray-600/30 border border-gray-500' : index === 2 ? 'bg-red-600/30 border border-red-500' : 'bg-gray-700 hover:bg-gray-600'}`}>
-                                        <div className="flex items-center space-x-4">
-                                            <span className={`text-xl font-extrabold w-8 text-center ${index === 0 ? 'text-yellow-300' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-red-300' : 'text-gray-400'}`}>
-                                              {index + 1}
-                                            </span>
-                                            <span className="text-lg font-medium text-white">{team.name}</span>
-                                        </div>
-                                        <span className="text-2xl font-extrabold text-indigo-400">{team.total_commits || 0}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </TimeSeriesCard>
-                    </div>
-
-                    {/* CHART (COL 2 & 3) */}
-                    <TimeSeriesCard title="5-Minute Commit Activity Trend" className="lg:col-span-2 bg-gray-800 border border-gray-700 min-h-[450px] relative">
-                        {loading && (
-                            <div className="absolute inset-0 bg-gray-800/80 flex items-center justify-center rounded-xl z-10">
-                                <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span className="text-indigo-400 font-medium">Fetching live data...</span>
-                            </div>
-                        )}
-                        
-                        <ResponsiveContainer width="100%" height={380}>
-                            <LineChart
-                                data={historyData}
-                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
-                                <XAxis dataKey="time" stroke="#9ca3af" />
-                                <YAxis allowDecimals={false} stroke="#9ca3af" />
-                                <Tooltip />
-                                <Legend />
-
-                                {/* Dynamically render lines for all active teams */}
-                                {teamConfigs.map((team, index) => (
-                                    <Line 
-                                        key={team.id}
-                                        type="monotone" 
-                                        dataKey={team.id} 
-                                        name={team.name} 
-                                        stroke={team.color} 
-                                        strokeWidth={3} 
-                                        dot={{ r: 4 }} 
-                                        activeDot={{ r: 8 }} 
-                                    />
-                                ))}
-                                
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </TimeSeriesCard>
-                </div>
-              </div>
-            </div>
-          );
-        };
-        
-        // --- END OF LIVE COMMIT DASHBOARD JSX CODE ---
-
-        // Final Render Call (This must be the last instruction)
-        ReactDOM.render(<App />, document.getElementById('root'));
-
+        // --- RUN THE FETCHER ---
+        fetchData(); // Run on page load
+        setInterval(fetchData, 30000); // Run every 30 seconds
     </script>
 </body>
 </html>
