@@ -1,15 +1,5 @@
 [
   {
-    "time": "07:36 PM",
-    "timestamp": 1768851395475,
-    "teams": {
-      "team_alpha": 0,
-      "team_beta": 0,
-      "team_gamma": 0
-    },
-    "total": 0
-  },
-  {
     "time": "07:45 PM",
     "timestamp": 1768851906822,
     "teams": {
@@ -492,6 +482,16 @@
   {
     "time": "03:32 PM",
     "timestamp": 1768923123713,
+    "teams": {
+      "team_alpha": 0,
+      "team_beta": 0,
+      "team_gamma": 0
+    },
+    "total": 0
+  },
+  {
+    "time": "03:56 PM",
+    "timestamp": 1768924584918,
     "teams": {
       "team_alpha": 0,
       "team_beta": 0,
